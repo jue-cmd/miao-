@@ -10,6 +10,7 @@
 #define PIC_M_DATA 0x21
 #define PIC_S_CTRL 0xa0
 #define PIC_S_DATA 0xa1
+#define EFLAGS_IF 0x00000200
 
 static void make_idt_desc(gate_desc *p_gdesc, uint8_t attr, intr_handler function);
 static gate_desc idt[IDT_DESC_CNT]; // 创建中断描述符数组
@@ -105,6 +106,7 @@ static void exception_init(void)
     intr_name[18] = "#MC Machine-Check Exception";
     intr_name[19] = "#XF SIMD Floating-Point Exception";
 }
+
 void idt_init()
 {
     puts("idt_init start\n");
@@ -117,4 +119,52 @@ void idt_init()
 
     asm volatile("lidt %0" : : "m"(idt_operand));
     puts("idt_init done\n");
+}
+
+// 开启中断
+enum intr_status intr_enable()
+{
+    enum intr_status old_status;
+    if (intr_get_status() == INTR_ON)
+    {
+        old_status = INTR_ON;
+        return old_status;
+    }
+    else
+    {
+        old_status = INTR_OFF;
+        asm volatile("sti");
+        return old_status;
+    }
+}
+
+// 关闭中断并返回终端关闭前的状态
+enum intr_status intr_disable()
+{
+    enum intr_status old_status;
+    if (intr_get_status() == INTR_ON)
+    {
+        old_status = INTR_ON;
+        asm volatile("cli" : : : "memory");
+        return old_status;
+    }
+    else
+    {
+        old_status = INTR_OFF;
+        return old_status;
+    }
+}
+
+/* 将中断状态设置为 status */
+enum intr_status intr_set_status(enum intr_status status)
+{
+    return status & INTR_ON ? intr_enable() : intr_disable();
+}
+enum intr_status intr_get_status()
+{
+
+    uint32_t eflags = 0;
+    asm volatile("pushfl");
+    asm volatile("popl %0" : "=g"(eflags));
+    return (EFLAGS_IF & eflags) ? INTR_ON : INTR_OFF;
 }
