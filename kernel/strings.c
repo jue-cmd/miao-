@@ -54,7 +54,7 @@ void puts(const char *str)
     return;
 }
 
-uint8_t strcmp(uint8_t *str_a, uint8_t *str_b)
+int8_t strcmp(uint8_t *str_a, uint8_t *str_b)
 {
     int i = 0;
     while (str_a[i] != '\0' && str_b[i] != '\0')
@@ -123,7 +123,7 @@ void print_num32_hex(uint32_t num)
     return;
 }
 
-void menset(void *dst_, uint8_t value, uint32_t size)
+void memset(void *dst_, uint8_t value, uint32_t size)
 {
     ASSERT(dst_ != NULL);
     uint8_t *dst = (uint8_t *)dst_;

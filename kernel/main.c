@@ -7,7 +7,5 @@ void main()
 {   
     init_all();
 
-    ASSERT(1==2);
-
     while (1);
 }

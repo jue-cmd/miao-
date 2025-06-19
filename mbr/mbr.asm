@@ -32,11 +32,18 @@ mov byte[gs:0x0c],'f'
 mov byte[gs:0x0d],0xA4
 
 mov eax,LOADER_START_SECTOR
-mov bx,LOADER_BASE_ADDR
+mov bx,LOADER_BASE_ADDR 
 mov cx,4
 call rd_disk_m_16
 
-jmp LOADER_BASE_ADDR
+find_loader_addr:
+    cmp dword [bx],'load'
+    jne .not_here
+    add bx,2
+    jmp bx
+.not_here:
+    inc bx
+    jmp find_loader_addr
 
 rd_disk_m_16:
     ;保存寄存器

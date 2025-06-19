@@ -67,7 +67,13 @@
     "globoal.h": "c",
     "interrupt.h": "c",
     "stdint.h": "c",
-    "init.h": "c"
+    "init.h": "c",
+    "bitset": "cpp",
+    "bitmap.h": "c",
+    "memory.h": "c",
+    "cstring": "c",
+    "typeinfo": "c",
+    "string.h": "c"
   },
   "Codegeex.RepoIndex": true
 }

@@ -1,8 +1,8 @@
 %include "boot.inc"
 %include "elf.inc"
+;jmp loader_start
 SECTION loader vstart=LOADER_BASE_ADDR
 LOADER_STACK_TOP equ LOADER_BASE_ADDR
-jmp loader_start
 gdt_addr:
     GDT_BASE: dd 0x00000000
             dd 0x00000000
@@ -20,15 +20,16 @@ gdt_addr:
     SELECTOR_VIDEO equ (0x0003 << 3) +TI_GDT+RPL0
 times 60 dq 0
 
-
+total_mem_bytes dd 0
 ;以下是 gdt 的指针，前 2 字节是 gdt 界限，后 4 字节是 gdt 起始地址
 gdt_ptr  dw GDT_LIMIT
          dd gdt_addr
 
-total_mem_bytes dd 0
-
 ards_buf times 244 db 0
 adrs_nr dw 0
+
+db 'load'
+
 loader_start:
     xor ebx,ebx
     mov edx,0x534d4150

@@ -2,9 +2,11 @@
 #include "header/strings.h"
 #include "header/interrupt.h"
 #include "device/timer.h"
+#include "header/memory.h"
 void init_all()
 {
     puts("init_all\n");
     idt_init();
     timer_init();
+    mem_init();
 }
