@@ -82,7 +82,7 @@ uint8_t strcmp(uint8_t *str_a, uint8_t *str_b)
         return 1;
     }
 }
-char *strcpy(uint8_t *dest, uint8_t *src)
+uint32_t strcpy(uint8_t *dest, uint8_t *src)
 {
     if (dest == NULL || src == NULL)
     {
