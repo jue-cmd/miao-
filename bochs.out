@@ -38,7 +38,7 @@
 00000000000i[USBCTL] Pluggable USB devices
 00000000000i[USBCTL]   floppy mouse tablet keypad keyboard hub disk cdrom
 00000000000i[USBCTL]   printer
-00000000000i[MEM0  ] allocated memory at 0x74f45f1dd010. after alignment, vector=0x74f45f1de000
+00000000000i[MEM0  ] allocated memory at 0x736145fdd010. after alignment, vector=0x736145fde000
 00000000000i[MEM0  ] 256.00MB
 00000000000i[MEM0  ] mem block size = 0x00020000, blocks=2048
 00000000000i[MEM0  ] rom at 0xffff0000/65536 ('/usr/share/bochs/BIOS-bochs-legacy')
@@ -50,7 +50,7 @@
 00000000000i[DEV   ] PIIX3 PCI-to-ISA bridge present at device 1, function 0
 00000000000i[PLUGIN] init_dev of 'cmos' plugin device by virtual method
 00000000000i[CMOS  ] Using local time for initial clock
-00000000000i[CMOS  ] Setting initial clock to: Sat Jun 21 14:33:28 2025 (time0=1750487608)
+00000000000i[CMOS  ] Setting initial clock to: Sat Jun 21 14:39:20 2025 (time0=1750487960)
 00000000000i[PLUGIN] init_dev of 'dma' plugin device by virtual method
 00000000000i[DMA   ] channel 4 used by cascade
 00000000000i[PLUGIN] init_dev of 'pic' plugin device by virtual method
@@ -195,21 +195,39 @@
 00000000000i[PLUGIN] reset of 'usb_uhci' plugin device by virtual method
 00000000000i[      ] set SIGINT handler to bx_debug_ctrlc_handler
 00000004662i[BIOS  ] $Revision: 14314 $ $Date: 2021-07-14 18:10:19 +0200 (Wed, 14 Jul 2021) $
-00000322045i[KBD   ] reset-disable command received
-00000324684i[PIDE  ] BAR #4: i/o base address = 0xc000
-00000324911i[UHCI  ] BAR #4: i/o base address = 0xc100
-00000330746i[P2ISA ] PCI IRQ routing: PIRQD# set to 0x0b
-00000330762i[P2ISA ] write: ELCR2 = 0x08
-00000330782i[UHCI  ] new IRQ line = 11
-00000330847i[P2ISA ] PCI IRQ routing: PIRQA# set to 0x0a
-00000330863i[P2ISA ] write: ELCR2 = 0x0c
-00000330883i[ACPI  ] new IRQ line = 10
-00000449183i[VBIOS ] VGABios $Id: vgabios.c 288 2021-05-28 19:05:28Z vruppert $
-00000449254i[BXVGA ] VBE known Display Interface b0c0
-00000449286i[BXVGA ] VBE known Display Interface b0c5
-00000451929i[VBIOS ] VBE Bios $Id: vbe.c 292 2021-06-03 12:24:22Z vruppert $
-00000613216i[XGUI  ] charmap update. Font is 9 x 16
-00000675380i[BIOS  ] ata0-0: PCHS=65/16/63 translation=none LCHS=65/16/63
-00004109344i[BIOS  ] IDE time out
-00016080300i[BIOS  ] Booting from 0000:7c00
-00788310140i[      ] Ctrl-C detected in signal handler.
+00000318071i[KBD   ] reset-disable command received
+00000320672i[PIDE  ] BAR #4: i/o base address = 0xc000
+00000320899i[UHCI  ] BAR #4: i/o base address = 0xc100
+00000326734i[P2ISA ] PCI IRQ routing: PIRQD# set to 0x0b
+00000326750i[P2ISA ] write: ELCR2 = 0x08
+00000326770i[UHCI  ] new IRQ line = 11
+00000326835i[P2ISA ] PCI IRQ routing: PIRQA# set to 0x0a
+00000326851i[P2ISA ] write: ELCR2 = 0x0c
+00000326871i[ACPI  ] new IRQ line = 10
+00000445171i[VBIOS ] VGABios $Id: vgabios.c 288 2021-05-28 19:05:28Z vruppert $
+00000445242i[BXVGA ] VBE known Display Interface b0c0
+00000445274i[BXVGA ] VBE known Display Interface b0c5
+00000447917i[VBIOS ] VBE Bios $Id: vbe.c 292 2021-06-03 12:24:22Z vruppert $
+00000615344i[XGUI  ] charmap update. Font is 9 x 16
+00000671368i[BIOS  ] ata0-0: PCHS=65/16/63 translation=none LCHS=65/16/63
+00004105332i[BIOS  ] IDE time out
+00016080308i[BIOS  ] Booting from 0000:7c00
+05147979880i[      ] Ctrl-C detected in signal handler.
+05147979881i[      ] dbg: Quit
+05147979881i[CPU0  ] CPU is in protected mode (active)
+05147979881i[CPU0  ] CS.mode = 32 bit
+05147979881i[CPU0  ] SS.mode = 32 bit
+05147979881i[CPU0  ] EFER   = 0x00000000
+05147979881i[CPU0  ] | EAX=00000000  EBX=c0005ff4  ECX=00000001  EDX=00000001
+05147979881i[CPU0  ] | ESP=c00008e0  EBP=c00008f8  ESI=00074000  EDI=c0006000
+05147979881i[CPU0  ] | IOPL=0 id vip vif ac vm rf nt of df if tf SF zf af pf cf
+05147979881i[CPU0  ] | SEG sltr(index|ti|rpl)     base    limit G D
+05147979881i[CPU0  ] |  CS:0008( 0001| 0|  0) 00000000 ffffffff 1 1
+05147979881i[CPU0  ] |  DS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
+05147979881i[CPU0  ] |  SS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
+05147979881i[CPU0  ] |  ES:0010( 0002| 0|  0) 00000000 ffffffff 1 1
+05147979881i[CPU0  ] |  FS:0000( 0000| 0|  0) 00000000 0000ffff 0 0
+05147979881i[CPU0  ] |  GS:0018( 0003| 0|  0) c00b8000 00007fff 1 1
+05147979881i[CPU0  ] | EIP=c0001565 (c0001565)
+05147979881i[CPU0  ] | CR0=0xe0000011 CR2=0x00000000
+05147979881i[CPU0  ] | CR3=0x00100000 CR4=0x00000000
