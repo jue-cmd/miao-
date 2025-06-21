@@ -3,6 +3,7 @@
 #include "header/strings.h"
 #include "header/bitmap.h"
 #include "header/debug.h"
+#include "header/globoal.h"
 //
 #define PG_SIZE 4096
 
@@ -18,6 +19,8 @@
 // 因为内核地址空间从3G开始,再加上内核页表大小为1M,所以内核堆的起始地址为3G+1M=0xc0100000
 #define K_HEAP_START 0xc0100000
 
+#define PDE_IDX(addr) ((addr & 0xffc00000) >> 22) // 获取页目录项的索引
+#define PTE_IDX(addr) ((addr & 0x003ff000) >> 12) // 获取页表项的索引
 struct pool
 {
      struct bitmap pool_bitmap;
@@ -30,7 +33,7 @@ struct virtual_addr kernel_vaddr;   // 此结构用来给内核分配虚拟地�
 
 static void mem_pool_init(uint32_t all_mem)
 {
-     ASSERT(all_mem !=0);
+     ASSERT(all_mem != 0);
      puts("mem_pool_init start\n");
      // 因为内核占有1G的内存空间,所以有256个页表一个页表可以映射1024个页每个页大小为4K.
      uint32_t page_table_size = PG_SIZE * 256;
@@ -86,10 +89,129 @@ static void mem_pool_init(uint32_t all_mem)
      puts("mem_pool_init done\n");
 }
 
+/*
+在fp中的虚拟内存池中申请pg_cnt个页,如果成功返回虚拟页的地址,失败返回NULL
+*/
+static void *vaddr_get(enum pool_flags pf, uint32_t pg_cnt)
+{
+     int vaddr_start = 0;
+     int bit_idx_start = -1;
+     uint32_t cnt = 0;
+     if (pf == PF_KERNEL)
+     {
+          bit_idx_start = bitmap_scan(&kernel_vaddr.vaddr_bitmap, pg_cnt);
+          if (bit_idx_start == -1)
+          {
+               return NULL;
+          }
+          while (cnt < pg_cnt)
+          {
+               bitmap_set(&kernel_vaddr.vaddr_bitmap, bit_idx_start + cnt, 1);
+               cnt++;
+          }
+          vaddr_start = kernel_vaddr.vaddr_start + bit_idx_start * PG_SIZE;
+     }
+     else
+     {
+          // TODO: 用户内存池
+     }
+     return (void *)vaddr_start;
+}
+
+/**
+ * 获取vaddr对应的pte指针
+ */
+uint32_t *get_pte_ptr_from_vaddr(uint32_t vaddr)
+{
+     uint32_t *pte =
+         (uint32_t *)(0xffc00000 +
+                      ((vaddr & 0xffc00000) >> 10) +
+                      PTE_IDX(vaddr) * 4);
+     return pte;
+}
+uint32_t *get_pde_ptr_from_vaddr(uint32_t vaddr)
+{
+     uint32_t *pde = (uint32_t *)((0xfffff000) + PDE_IDX(vaddr) * 4);
+     return pde;
+}
+
+static void *palloc(struct pool *m_pool)
+{
+     int bit_idx = bitmap_scan(&m_pool->pool_bitmap, 1);
+     if (bit_idx == -1)
+     {
+          return NULL;
+     }
+     bitmap_set(&m_pool->pool_bitmap, bit_idx, 1);
+     uint32_t page_phyaddr = ((bit_idx * PG_SIZE) + m_pool->phy_addr_start);
+     return (void *)page_phyaddr;
+}
+
+static void page_table_add(void *_vaddr, void *_page_phyaddr)
+{
+     uint32_t vaddr = (uint32_t)_vaddr;
+     uint32_t page_phyaddr = (uint32_t)_page_phyaddr;
+     uint32_t *pde = get_pde_ptr_from_vaddr(vaddr);
+     uint32_t *pte = get_pte_ptr_from_vaddr(vaddr);
+     if (*pde & 1)
+     {
+          ASSERT(!(*pte & 1));
+          if (!(*pte & 1))
+          {
+               *pte = (page_phyaddr | PG_US_U | PG_RW_W | PG_P_1);
+          }
+          else
+          {
+               PANIC("pte repeat");
+               *pte = (page_phyaddr | PG_US_U | PG_RW_W | PG_P_1);
+          }
+     }
+     else
+     {
+          uint32_t pde_phyaddr = (uint32_t)palloc(&kernel_pool);
+          *pde = (pde_phyaddr | PG_US_U | PG_RW_W | PG_P_1);
+          memset((void *)((uint32_t)pte & 0xfffff000), 0, PG_SIZE);
+          ASSERT(!(*pte & 1));
+          *pte = (page_phyaddr | PG_US_U | PG_RW_W | PG_P_1);
+     }
+}
+
+void *malloc_page(enum pool_flags pf, uint32_t pg_cnt)
+{
+     ASSERT(pg_cnt > 0&& pg_cnt <= 3840);
+     void *vaddr_start = vaddr_get(pf, pg_cnt);
+     if (vaddr_start == NULL)
+     {
+          return NULL;
+     }
+     uint32_t vaddr = (uint32_t)vaddr_start, cnt = pg_cnt;
+     struct pool *mem_pool = pf & PF_KERNEL ? &kernel_pool : &user_pool;
+     while (cnt > 0)
+     {
+          void *page_phyaddr = palloc(mem_pool);
+          if (page_phyaddr == NULL)
+          {
+               return NULL;
+          }
+          page_table_add((void *)vaddr, page_phyaddr);
+          vaddr += PG_SIZE;
+          cnt--;
+     }
+     return vaddr_start;
+}
+
+void *get_kernel_pages(uint32_t pg_cnt){
+     void* vaddr=malloc_page(PF_KERNEL,pg_cnt);
+     if(vaddr!=NULL){
+          memset(vaddr,0,pg_cnt*PG_SIZE);
+     }
+     return vaddr;
+}
+
 void mem_init()
 {
      puts("mem_init start\n");
-     //0xb00为loader中计算出的内存大小的地址
+     // 0xb00为loader中计算出的内存大小的地址
      uint32_t mem_bytes_total = (*(uint32_t *)0xb00);
      puts("total_mem: ");
      print_num32_hex(mem_bytes_total);

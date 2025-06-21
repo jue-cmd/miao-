@@ -24,6 +24,12 @@
 #define IDT_DESC_32_TYPE 0xE // 32位的中断门
 #define IDT_DESC_16_TYPE 0x6
 
+#define PG_P 1
+#define PG_RW_R 0
+#define PG_RW_W 2
+#define PG_US_S 0
+#define PG_US_U 4
+
 #define IDT_DESC_ATTR_DPL0 \
     ((IDT_DESC_P << 7) + (IDT_DESC_DPL0 << 5) + IDT_DESC_32_TYPE)
 

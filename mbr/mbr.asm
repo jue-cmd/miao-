@@ -15,37 +15,21 @@ int 0x10
 mov ax,0xb800
 mov gs,ax
 mov sp,0x7c00
-
-mov byte[gs:0x00],'L'
-mov byte[gs:0x01],0xA4
-mov byte[gs:0x02],'O'
-mov byte[gs:0x03],0xA4
-mov byte[gs:0x04],'A'
-mov byte[gs:0x05],0xA4
-mov byte[gs:0x06],'D'
-mov byte[gs:0x07],0xA4
-mov byte[gs:0x08],'I'
-mov byte[gs:0x09],0xA4
-mov byte[gs:0x0a],'N'
-mov byte[gs:0x0b],0xA4
-mov byte[gs:0x0c],'f'
-mov byte[gs:0x0d],0xA4
-
 mov eax,LOADER_START_SECTOR
 mov bx,LOADER_BASE_ADDR 
 mov cx,4
-call rd_disk_m_16
-
+call rd_disk_m_16;加载loader到内存
 find_loader_addr:
     cmp dword [bx],'load'
     jne .not_here
-    add bx,2
+    add bx,4
     jmp bx
 .not_here:
     inc bx
     jmp find_loader_addr
 
 rd_disk_m_16:
+    pushad
     ;保存寄存器
     mov esi,eax
     mov di,cx
@@ -97,6 +81,7 @@ rd_disk_m_16:
         mov [bx],ax
         add bx,2
         loop .go_on_read
+        popad
         ret
 
 times 510-($-$$) db 0

@@ -2,10 +2,18 @@
 #include "header/strings.h"
 #include "header/init.h"
 #include "header/debug.h"
+#include "header/memory.h"
 
 void main()
-{   
+{
     init_all();
 
-    while (1);
+    void *addr = get_kernel_pages(3840);
+
+    puts("\n get_kernel_page start vaddr is ");
+    print_num32_hex((uint32_t)addr);
+
+    puts("\n");
+    while (1)
+        ;
 }

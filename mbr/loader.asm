@@ -27,9 +27,7 @@ gdt_ptr  dw GDT_LIMIT
 
 ards_buf times 244 db 0
 adrs_nr dw 0
-
 db 'load'
-
 loader_start:
     xor ebx,ebx
     mov edx,0x534d4150
