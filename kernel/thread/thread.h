@@ -45,7 +45,7 @@ struct intr_stack
 };
 
 
-struct threas_stack{
+struct thread_stack{
     uint32_t ebp;
     uint32_t ebx;
     uint32_t edi;

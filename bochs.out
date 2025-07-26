@@ -38,7 +38,7 @@
 00000000000i[USBCTL] Pluggable USB devices
 00000000000i[USBCTL]   floppy mouse tablet keypad keyboard hub disk cdrom
 00000000000i[USBCTL]   printer
-00000000000i[MEM0  ] allocated memory at 0x7f43243dd010. after alignment, vector=0x7f43243de000
+00000000000i[MEM0  ] allocated memory at 0x7fd3ab5dd010. after alignment, vector=0x7fd3ab5de000
 00000000000i[MEM0  ] 256.00MB
 00000000000i[MEM0  ] mem block size = 0x00020000, blocks=2048
 00000000000i[MEM0  ] rom at 0xffff0000/65536 ('/usr/share/bochs/BIOS-bochs-legacy')
@@ -50,7 +50,7 @@
 00000000000i[DEV   ] PIIX3 PCI-to-ISA bridge present at device 1, function 0
 00000000000i[PLUGIN] init_dev of 'cmos' plugin device by virtual method
 00000000000i[CMOS  ] Using local time for initial clock
-00000000000i[CMOS  ] Setting initial clock to: Sun Jun 29 16:47:42 2025 (time0=1751186862)
+00000000000i[CMOS  ] Setting initial clock to: Sat Jul 26 17:32:03 2025 (time0=1753522323)
 00000000000i[PLUGIN] init_dev of 'dma' plugin device by virtual method
 00000000000i[DMA   ] channel 4 used by cascade
 00000000000i[PLUGIN] init_dev of 'pic' plugin device by virtual method
@@ -208,7 +208,29 @@
 00000445265i[BXVGA ] VBE known Display Interface b0c0
 00000445297i[BXVGA ] VBE known Display Interface b0c5
 00000447940i[VBIOS ] VBE Bios $Id: vbe.c 292 2021-06-03 12:24:22Z vruppert $
-00000612616i[XGUI  ] charmap update. Font is 9 x 16
+00000609732i[XGUI  ] charmap update. Font is 9 x 16
 00000671391i[BIOS  ] ata0-0: PCHS=65/16/63 translation=none LCHS=65/16/63
 00004105355i[BIOS  ] IDE time out
 00016080301i[BIOS  ] Booting from 0000:7c00
+01457581150i[      ] Ctrl-C detected in signal handler.
+01457581151i[      ] dbg: Quit
+01457581151i[CPU0  ] CPU is in protected mode (active)
+01457581151i[CPU0  ] CS.mode = 32 bit
+01457581151i[CPU0  ] SS.mode = 32 bit
+01457581151i[CPU0  ] EFER   = 0x00000000
+01457581151i[CPU0  ] | EAX=00000000  EBX=c0005ff4  ECX=00000001  EDX=00000001
+01457581151i[CPU0  ] | ESP=c0000850  EBP=c0000858  ESI=00074000  EDI=c0006000
+01457581151i[CPU0  ] | IOPL=0 id vip vif ac vm rf nt of df if tf sf zf af pf cf
+01457581151i[CPU0  ] | SEG sltr(index|ti|rpl)     base    limit G D
+01457581151i[CPU0  ] |  CS:0008( 0001| 0|  0) 00000000 ffffffff 1 1
+01457581151i[CPU0  ] |  DS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
+01457581151i[CPU0  ] |  SS:0010( 0002| 0|  0) 00000000 ffffffff 1 1
+01457581151i[CPU0  ] |  ES:0010( 0002| 0|  0) 00000000 ffffffff 1 1
+01457581151i[CPU0  ] |  FS:0000( 0000| 0|  0) 00000000 0000ffff 0 0
+01457581151i[CPU0  ] |  GS:0018( 0003| 0|  0) c00b8000 00007fff 1 1
+01457581151i[CPU0  ] | EIP=c000251b (c000251b)
+01457581151i[CPU0  ] | CR0=0xe0000011 CR2=0x00000000
+01457581151i[CPU0  ] | CR3=0x00100000 CR4=0x00000000
+01457581151i[CMOS  ] Last time is 1753522687 (Sat Jul 26 17:38:07 2025)
+01457581151i[XGUI  ] Exit
+01457581151i[SIM   ] quit_sim called with exit code 0
