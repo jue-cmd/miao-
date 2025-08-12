@@ -8,6 +8,7 @@ gcc -m32 -fno-stack-protector -c -o ./temp/timer.o ./kernel/device/timer.c
 gcc -m32 -fno-stack-protector -c -o ./temp/debug.o ./kernel/debug.c
 gcc -m32 -fno-stack-protector -c -o ./temp/bitmap.o ./kernel/bitmap.c
 gcc -m32 -fno-stack-protector -c -o ./temp/memory.o ./kernel/memory.c
+gcc -m32 -fno-stack-protector -c -o ./temp/thread.o ./kernel/thread/thread.c
 
 ld -m elf_i386 \
 ./temp/main.o \
@@ -20,5 +21,6 @@ ld -m elf_i386 \
 ./temp/debug.o \
 ./temp/bitmap.o \
 ./temp/memory.o \
+./temp/thread.o \
 -Ttext 0xc0001500 -e main -o ./temp/kernel.bin 
 dd if=./temp/kernel.bin of=./c.img bs=512 count=200 seek=9 conv=notrunc

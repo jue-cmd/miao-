@@ -27,7 +27,6 @@ void init_thrad(struct task_struct *pthread, char *name, int32_t prio)
     strcpy(pthread->name, name);
     pthread->status = TASK_RUNNING;
     pthread->priority = prio;
-
     pthread->self_kstack = (uint32_t *)((uint32_t)pthread + PG_SIZE);
     pthread->stack_magic = 0x11451419; // 就是觉得这个数字很吉利
 }
@@ -50,7 +49,7 @@ struct task_struct *thread_start(char *name, int prio, thread_func function, voi
     asm volatile("pop %%ebp" : : : "memory");
     asm volatile("pop %%ebx" : : : "memory");
     asm volatile("pop %%edi" : : : "memory");
-    asm volatile("opo %%esi" : : : "memory");
+    asm volatile("pop %%esi" : : : "memory");
     asm volatile("ret" : : : "memory");
     return pthread;
 }

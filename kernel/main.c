@@ -3,17 +3,22 @@
 #include "header/init.h"
 #include "header/debug.h"
 #include "header/memory.h"
+#include "thread/thread.h"
+
+void just_a_test(void *arg);
 
 void main()
 {
     init_all();
 
-
-    void *addr = get_kernel_pages(1);
-    
-    puts("\n get_kernel_page start vaddr is ");
-    print_num32_hex((uint32_t)addr);
-    puts("\n");
+    thread_start("just_a_test", 20, just_a_test, "just a test");
+    puts("check point");
     while (1)
         ;
+}
+
+void just_a_test(void *arg)
+{
+    puts(arg);
+    return;
 }

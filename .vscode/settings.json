@@ -74,7 +74,8 @@
     "cstring": "c",
     "typeinfo": "c",
     "string.h": "c",
-    "chrono": "c"
+    "chrono": "c",
+    "thread.h": "c"
   },
   "Codegeex.RepoIndex": true
 }
