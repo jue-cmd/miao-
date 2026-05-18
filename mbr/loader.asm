@@ -1,7 +1,8 @@
+;仅负责进入到保护模式，并创建好页表
 %include "boot.inc"
 %include "elf.inc"
-;jmp loader_start
 SECTION loader vstart=LOADER_BASE_ADDR
+[bits 16]
 LOADER_STACK_TOP equ LOADER_BASE_ADDR
 gdt_addr:
     GDT_BASE: dd 0x00000000
@@ -11,17 +12,17 @@ gdt_addr:
     DATA_STACK_DESC: dd 0x0000FFFF
                     dd DESC_DATA_HIGH4
 
-    VIDEO_DESC: dd 0x80000007
-                dd DESC_VIDEO_HIGH4
+    VIDEO_DESC: 
+        dw 0x7FFF        ; Limit 0-15
+        dw 0x8000        ; Base 0-15 = 0x8000? 不对，应该是 0xB800
+        db 0x0B          ; Base 16-23 = 0x0B
+        db 0x92          ; P=1, DPL=0, S=1, Type=0010 (data, read/write)
+        db 0xCF          ; G=1, D=1, L=0, AVL=0, Limit 16-19 = 0xF
+        db 0x00          ; Base 24-31 = 0x00
     GDT_SIZE equ $ - GDT_BASE
     GDT_LIMIT equ GDT_SIZE - 1
-    SELECTOR_CODE equ (0x0001 << 3) +TI_GDT+RPL0
-    SELECTOR_DATA equ (0x0002 << 3) +TI_GDT+RPL0
-    SELECTOR_VIDEO equ (0x0003 << 3) +TI_GDT+RPL0
-times 60 dq 0
 
-total_mem_bytes dd 0
-;以下是 gdt 的指针，前 2 字节是 gdt 界限，后 4 字节是 gdt 起始地址
+times 60 dq 0
 gdt_ptr  dw GDT_LIMIT
          dd gdt_addr
 
@@ -29,79 +30,43 @@ ards_buf times 244 db 0
 adrs_nr dw 0
 db 'load'
 loader_start:
-    xor ebx,ebx
-    mov edx,0x534d4150
-    mov di,ards_buf
-    .e820_mem_get_loop:
-        mov ax,0x0000e820
-        mov ecx,20
-        int 0x15
-        jc .e820_mem_get_fail_try_e801
-        add di,cx
-        inc word [adrs_nr]
-        cmp ebx,0
-        jnz .e820_mem_get_loop
-    mov cx,[adrs_nr]
-    mov ebx,ards_buf
-    xor edx,edx
-    .find_max_mem_area:
-        mov eax,[ebx]
-        add eax,[ebx+8]
-        add ebx,20
-        cmp edx,eax
-        jge .next_ards
-        mov edx,eax
-    .next_ards:
-        loop .find_max_mem_area
-        jmp .mem_get_ok
-    .e820_mem_get_fail_try_e801:
-        mov ax,0xe801
-        int 0x15
-        jc .e801_failed_try_88
-        mov cx, 0x400
-        mul cx
-        shl edx,16
-        or edx,eax
-        add edx,0x100000
-        mov esi,edx
-        xor eax, eax
-        mov ecx, 0x1000000
-        mul ecx
-        add esi, eax
-        mov edx, esi
-        jmp .mem_get_ok
-    .e801_failed_try_88:
-        mov ah,0x88
-        int 0x15
-        jc .error_hlt
-        and eax,0x0000fffff
-        mov cx, 0x400
-        mul cx
-        shl edx,16
-        or edx, eax
-        add edx,0x100000
-        jmp .mem_get_ok
-    .error_hlt:
-        mov byte [gs:0xb6],'E'
-        mov byte [gs:0xb8], 0x0A
-        jmp $
-    .mem_get_ok:
-        mov [total_mem_bytes],edx
-
-    xor edx, edx
+    xor ax, ax
+    mov ds, ax
+    mov es, ax
     in al, 0x92
     or al, 0000_0010B
     out 0x92, al
-
+    ;mov esi,gdt_ptr
+    cli
     lgdt [gdt_ptr]
-
+    
     mov eax, cr0
     or eax, 0x00000001
     mov cr0, eax
-
     jmp SELECTOR_CODE:p_mode_start
 
 [bits 32]
+
+test_print:
+    ; 使用 VIDEO 段选择子
+    mov ax, SELECTOR_VIDEO
+    mov gs, ax
+    ; 在屏幕第一行第一列写字符 'S'（黑底绿字，0x0A = 绿色）
+    mov word [gs:0], 0x0A53  ; 0x0A 是属性（绿色），0x53 是 'S' 的 ASCII
+    ; 或者写白色字符（0x0F = 白字黑底）
+    ; mov word [gs:0], 0x0F53
+    ret
+
+test_io_only:
+    ; 测试 out 指令
+    mov dx, 0x03D4
+    mov al, 0x0E
+    out dx, al
+    ; 测试 in 指令
+    mov dx, 0x03D5
+    in al, dx
+    ret
+
 p_mode_start:
     mov ax, SELECTOR_DATA
     mov ds, ax
@@ -110,28 +75,19 @@ p_mode_start:
     mov esp, LOADER_STACK_TOP
     mov ax, SELECTOR_VIDEO
     mov gs, ax
-    
-    mov eax, KERNEL_START_SECTOR
-    mov ebx, KERNEL_BIN_BASE_ADDR
-    mov ecx, 200;读入200个扇区
-    
-    call rd_disk_m_32
-
     call setup_page;初始化页表
     sgdt [gdt_ptr]
-
     mov ebx,[gdt_ptr+2]
-    or dword [ebx+0x18+4],0xc0000000
-
+    ;or dword [ebx+0x18+4],0xc0000000
     add dword [gdt_ptr+2],0xc0000000
     add esp,0xc0000000
     mov eax, PAGE_DIR_TABLE_POS
     mov cr3, eax
-
     mov eax, cr0
-    or eax,0x80000000
+    or eax, 0x80000000
     mov cr0, eax
-
+    mov ax, SELECTOR_VIDEO
+    mov gs, ax
     lgdt [gdt_ptr]
     jmp enter_kernel
 enter_kernel:
@@ -151,6 +107,7 @@ kernel_init:
 
     add ebx,KERNEL_BIN_BASE_ADDR
     mov cx, [KERNEL_BIN_BASE_ADDR+44]
+
     .search_segment:
         cmp byte[ebx+0],PT_NULL
         je .PTNULL
@@ -163,7 +120,7 @@ kernel_init:
         add esp,12
         .PTNULL:
             add ebx,edx
-        loop .search_segment
+        loop .search_segment    
     ret
 setup_page:
     ;清空页目录表
@@ -206,60 +163,6 @@ setup_page:
     loop .create_kernel_pde
     ret
 
-
-rd_disk_m_32:
-    ;保存寄存器
-    mov esi,eax
-    mov edi,ecx
-
-    mov dx,0x1f2;sector count寄存器
-    mov al,cl;扇区数
-    out dx,al
-
-    mov eax,esi
-
-    mov dx,0x1f3
-    out dx,al
-
-    mov cl,8
-    shr eax,cl
-    mov dx,0x1f4
-    out dx,al
-
-    shr eax,cl
-    mov dx,0x1f5
-    out dx,al
-
-    shr eax,cl
-    and al,0x0f
-    or al,0xe0
-    mov dx,0x1f6
-    out dx,al
-
-    mov dx,0x1f7
-    mov al,0x20
-    out dx,al
-
-    .not_ready:
-        nop
-        in al,dx
-        and al,0x88
-
-        cmp al,0x08
-        jnz .not_ready
-
-        mov eax,edi
-        mov edx,256
-        mul edx
-        mov ecx,eax
-
-        mov dx,0x1f0
-    .go_on_read:
-        in ax,dx
-        mov [ebx],ax
-        add ebx,2
-        loop .go_on_read
-        ret
 ;void mem_cpy(void *src,void *dst,int size)
 mem_cpy:
     cld;清除方向标志

@@ -14,7 +14,7 @@ bool bitmap_scan_test(struct bitmap *bt, uint32_t bit_idx)
     uint32_t byte_idx = bit_idx / 8;
     uint32_t bit_idx_in_byte = bit_idx % 8;
     return (bt->bits[byte_idx] && (_BITMAP_MASK_ << bit_idx_in_byte)) != 0;
-}.
+}
 
 
 /**

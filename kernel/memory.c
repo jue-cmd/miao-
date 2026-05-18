@@ -16,7 +16,6 @@
  * 0xc009f000                内核主线程栈顶
  */
 #define MEM_BITMAP_BASE 0xc009a000
-// 因为内核地址空间从3G开始,再加上内核页表大小为1M,所以内核堆的起始地址为3G+1M=0xc0100000
 #define K_HEAP_START 0xc0100000
 
 #define PDE_IDX(addr) ((addr & 0xffc00000) >> 22) // 获取页目录项的索引

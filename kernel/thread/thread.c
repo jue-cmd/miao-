@@ -21,7 +21,7 @@ void thread_create(struct task_struct *pthread, thread_func *function, void *fun
     kthread_stack->ebp = kthread_stack->ebx = kthread_stack->esi = kthread_stack->edi = 0;
 }
 
-void init_thrad(struct task_struct *pthread, char *name, int32_t prio)
+void init_thread(struct task_struct *pthread, char *name, int32_t prio)
 {
     memset(pthread, 0, sizeof(struct task_struct));
     strcpy(pthread->name, name);
@@ -43,13 +43,23 @@ void init_thrad(struct task_struct *pthread, char *name, int32_t prio)
 struct task_struct *thread_start(char *name, int prio, thread_func function, void *func_arg)
 {
     struct task_struct *pthread = get_kernel_pages(1);
-    init_thrad(pthread, name, prio);
+    init_thread(pthread, name, prio);
     thread_create(pthread, function, func_arg);
-    asm volatile("movl %0,%%esp" : : "g"(pthread->self_kstack) : "memory");
-    asm volatile("pop %%ebp" : : : "memory");
-    asm volatile("pop %%ebx" : : : "memory");
-    asm volatile("pop %%edi" : : : "memory");
-    asm volatile("pop %%esi" : : : "memory");
-    asm volatile("ret" : : : "memory");
-    return pthread;
+
+    /* * 关键修正：将 esp 切换到我们构造好的线程栈顶。
+     * 此时 pthread->self_kstack 必须指向线程栈中存储寄存器 esi 的位置。
+     */
+    asm volatile (
+        "movl %0, %%esp; "       // 切换栈指针到新线程的栈
+        "pop %%ebp; "            // 弹出预留的寄存器环境
+        "pop %%ebx; "
+        "pop %%edi; "
+        "pop %%esi; "
+        "ret"                    // 弹出 thread_create 压入的 function 地址并跳转
+        : 
+        : "g" (pthread->self_kstack) 
+        : "memory"
+    );
+
+    return pthread; // 实际上这行永远不会被执行
 }
