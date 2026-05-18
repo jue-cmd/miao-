@@ -100,9 +100,7 @@ kernel_init:
     xor ecx,ecx
     xor edx,edx
 
-    ;获取program header 大小
     mov dx,[KERNEL_BIN_BASE_ADDR+42]
-    ;获取program header 偏移量
     mov ebx,[KERNEL_BIN_BASE_ADDR+28]
 
     add ebx,KERNEL_BIN_BASE_ADDR
