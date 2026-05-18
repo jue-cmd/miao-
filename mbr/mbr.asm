@@ -9,26 +9,44 @@ SECTION MBR vstart=0x7c00
     mov sp, 0x7c00
     sti
 
-    mov [BOOT_DRIVE], dl    ; 保存启动驱动器号
+    mov [BOOT_DRIVE], dl
+    mov ah, 0x41
+    mov bx, 0x55aa
+    mov dl, [BOOT_DRIVE]
+    int 0x13
+    jc disk_error_halt
+    cmp bx, 0xaa55
+    jne disk_error_halt
 
-    ; 准备加载 loader
-    mov bx, LOADER_OFS      ; 偏移
-    mov ax, LOADER_SEG      ; 段
-    mov es, ax              ; 先把段寄存器填好，AX 随便用
+    mov bx, LOADER_OFS
+    mov ax, LOADER_SEG
+    mov es, ax 
     
-    mov eax, LOADER_START_SECTOR ; 最后再给 EAX 赋值，确保它是 0x2
-    mov cx, 4               ; 读 4 个扇区
+    mov eax, LOADER_START_SECTOR
+    mov cx, 4
     call rd_disk_m_16
 
-    ; 准备加载 Kernel
-    mov bx,  0x0   ; 偏移
-    mov ax, KERNEL_BIN_BASE_ADDR>>4        ; 段
-    mov es, ax              ; 先把段寄存器填好，AX 随便用
+    mov bx,  0x0
+    mov ax, KERNEL_BIN_BASE_ADDR>>4
+    mov es, ax
     
-    mov eax, KERNEL_START_SECTOR ; 最后再给 EAX 赋值，确保它是 0x2
-    mov cx, 128              ; 读 4 个扇区
+    mov eax, KERNEL_START_SECTOR  
+    
+
+    mov bp, 8                       
+.load_kernel_loop:
+    mov cx, 16
     call rd_disk_m_16
-    ; 查找 magic 'load'
+    
+    add eax, 16
+
+    mov dx, es
+    add dx, 0x200
+    mov es, dx
+    
+    dec bp
+    jnz .load_kernel_loop
+
     mov ax, LOADER_SEG
     mov es, ax
     mov bx, LOADER_OFS
@@ -41,7 +59,6 @@ find_loader_magic:
     jmp disk_error_halt      
 
 loader_found:
-
     add bx, 4             
     push bx                
     mov ah, 0x0e         
@@ -53,9 +70,6 @@ loader_found:
     push bx              
     retf               
 
-; -----------------------------------------------------------
-; 读取函数 (去掉了点号开头的局部标签，避免歧义)
-; -----------------------------------------------------------
 rd_disk_m_16:
     pushad
 
@@ -63,6 +77,9 @@ rd_disk_m_16:
     mov word [dap_buffer_offset], bx
     mov word [dap_buffer_segment], es
     mov dword [dap_lba_low], eax
+
+    xor ecx, ecx
+    mov dword [dap_lba_high], ecx
 
     mov ah, 0x42
     mov dl, [BOOT_DRIVE]
@@ -74,14 +91,33 @@ rd_disk_m_16:
     ret
 
 disk_error_halt:
-    mov ax, 0x0e45 ; 打印 'E'
-    int 0x10
+    mov al, ah
+    call print_hex
     hlt
-    jmp disk_error_halt
+    jmp $
+
+print_hex:
+    push ax
+    mov al, ah
+    shr al, 4
+    call print_nibble
+    pop ax
+    and al, 0x0F
+    call print_nibble
+    ret
+
+print_nibble:
+    add al, '0'
+    cmp al, '9'
+    jle .print
+    add al, 7
+.print:
+    mov ah, 0x0e
+    int 0x10
+    ret
 
 BOOT_DRIVE: db 0
 
-; Disk Address Packet 结构
 align 4
 dap:
     dap_size           db 0x10
@@ -92,6 +128,5 @@ dap:
     dap_lba_low        dd 0
     dap_lba_high       dd 0
 
-; -----------------------------------------------------------
 times 510 - ($ - $$) db 0
 dw 0xaa55

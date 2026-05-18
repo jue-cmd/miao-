@@ -39,27 +39,12 @@ void init_thread(struct task_struct *pthread, char *name, int32_t prio)
  * @param function: 线程函数
  * @param func_arg: 线程函数参数
  * @return: struct task_struct *
+ * TODO
  */
 struct task_struct *thread_start(char *name, int prio, thread_func function, void *func_arg)
 {
     struct task_struct *pthread = get_kernel_pages(1);
     init_thread(pthread, name, prio);
     thread_create(pthread, function, func_arg);
-
-    /* * 关键修正：将 esp 切换到我们构造好的线程栈顶。
-     * 此时 pthread->self_kstack 必须指向线程栈中存储寄存器 esi 的位置。
-     */
-    asm volatile (
-        "movl %0, %%esp; "       // 切换栈指针到新线程的栈
-        "pop %%ebp; "            // 弹出预留的寄存器环境
-        "pop %%ebx; "
-        "pop %%edi; "
-        "pop %%esi; "
-        "ret"                    // 弹出 thread_create 压入的 function 地址并跳转
-        : 
-        : "g" (pthread->self_kstack) 
-        : "memory"
-    );
-
-    return pthread; // 实际上这行永远不会被执行
+    return pthread;
 }

@@ -6,6 +6,7 @@
 #include "thread/thread.h"
 
 void just_a_test(void *arg);
+
 void main()
 {
     init_all();
@@ -15,9 +16,22 @@ void main()
         ;
 }
 
+uint32_t feibo(uint32_t a)
+{
+    if(a==0)
+    {
+        return 1;
+    }
+    if(a==1){
+        return 1;
+    }
+    return feibo(a-1)+feibo(a-2);
+}
+
 void just_a_test(void *arg)
 {
     puts(arg);
-    //while(1);
+    print_num32(feibo(10));
+    while(1);
     return;
 }
