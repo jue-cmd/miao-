@@ -6,12 +6,13 @@
 #include "thread/thread.h"
 
 void just_a_test(void *arg);
-
+uint32_t feibo(uint32_t a);
 void main()
 {
     init_all();
     thread_start("just_a_test", 20, just_a_test, "just a test");
     puts("check point");
+    print_num32(feibo(5));
     while (1)
         ;
 }
