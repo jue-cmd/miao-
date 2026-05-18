@@ -12,7 +12,7 @@ void main()
     init_all();
     thread_start("just_a_test", 20, just_a_test, "just a test");
     puts("check point");
-    print_num32(feibo(5));
+    print_num32(feibo(10));
     while (1)
         ;
 }
