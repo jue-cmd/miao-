@@ -121,7 +121,6 @@ kernel_init:
         loop .search_segment    
     ret
 setup_page:
-    ;清空页目录表
     mov ecx,4096
     mov esi,0
     .clear_page_dir:
@@ -168,9 +167,9 @@ mem_cpy:
     mov ebp,esp
     push ecx
 
-    mov edi,[ebp+8] ;目标地址
-    mov esi,[ebp+12] ;源地址
-    mov ecx,[ebp+16] ;大小
+    mov edi,[ebp+8]
+    mov esi,[ebp+12]
+    mov ecx,[ebp+16]
     rep movsb
     pop ecx
     pop ebp

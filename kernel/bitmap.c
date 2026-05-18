@@ -9,7 +9,7 @@ void bitmap_init(struct bitmap *bt){
 /**
  * 判断第bit_idx位是否为空闲
  */
-bool bitmap_scan_test(struct bitmap *bt, uint32_t bit_idx)
+uint8_t bitmap_scan_test(struct bitmap *bt, uint32_t bit_idx)
 {
     uint32_t byte_idx = bit_idx / 8;
     uint32_t bit_idx_in_byte = bit_idx % 8;

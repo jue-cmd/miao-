@@ -207,10 +207,14 @@ void *get_kernel_pages(uint32_t pg_cnt){
      return vaddr;
 }
 
+//TODO
+uint32_t get_total_memory(){
+
+}
+
 void mem_init()
 {
      puts("mem_init start\n");
-     // 0xb00为loader中计算出的内存大小的地址
      uint32_t mem_bytes_total = (*(uint32_t *)0xb00);
      puts("total_mem: ");
      print_num32_hex(mem_bytes_total);
