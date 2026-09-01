@@ -21,6 +21,8 @@ enum pool_flags
 #define PG_US_U 4
 // U/S 属性位值，用户级
 
+#define IS_PRESENT(entry)  ((entry) & PG_P_1)
+
 extern struct pool kernel_pool, user_pool;
 void mem_init(void);
 void *get_kernel_pages(uint32_t pg_cnt);

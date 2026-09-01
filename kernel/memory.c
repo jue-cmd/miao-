@@ -152,32 +152,44 @@ static void page_table_add(void *_vaddr, void *_page_phyaddr)
      uint32_t page_phyaddr = (uint32_t)_page_phyaddr;
      uint32_t *pde = get_pde_ptr_from_vaddr(vaddr);
      uint32_t *pte = get_pte_ptr_from_vaddr(vaddr);
-     if (*pde & 1)
+
+     /* PDE 已存在：页表可用，只需安装 PTE（PTE 必须尚不存在） */
+     if (IS_PRESENT(*pde))
      {
-          ASSERT(!(*pte & 1));
-          if (!(*pte & 1))
+          if (IS_PRESENT(*pte))
           {
-               *pte = (page_phyaddr | PG_US_U | PG_RW_W | PG_P_1);
+               puts("page_table_add: PTE already present\n");
+               puts("  vaddr=");
+               print_num32_hex(vaddr);
+               puts(" phy=");
+               print_num32_hex(page_phyaddr);
+               puts("\n  pde*=");
+               print_num32_hex((uint32_t)pde);
+               puts(" *pde=");
+               print_num32_hex(*pde);
+               puts("\n  pte*=");
+               print_num32_hex((uint32_t)pte);
+               puts(" *pte=");
+               print_num32_hex(*pte);
+               puts("\n");
           }
-          else
-          {
-               PANIC("pte repeat");
-               *pte = (page_phyaddr | PG_US_U | PG_RW_W | PG_P_1);
-          }
+          ASSERT(!IS_PRESENT(*pte));
+          *pte = (page_phyaddr | PG_US_U | PG_RW_W | PG_P_1);
      }
      else
      {
+          /* PDE 不存在：先分配页表，清零后再安装 PTE */
           uint32_t pde_phyaddr = (uint32_t)palloc(&kernel_pool);
           *pde = (pde_phyaddr | PG_US_U | PG_RW_W | PG_P_1);
           memset((void *)((uint32_t)pte & 0xfffff000), 0, PG_SIZE);
-          ASSERT(!(*pte & 1));
+          ASSERT(!IS_PRESENT(*pte));
           *pte = (page_phyaddr | PG_US_U | PG_RW_W | PG_P_1);
      }
 }
 
 void *malloc_page(enum pool_flags pf, uint32_t pg_cnt)
 {
-     ASSERT(pg_cnt > 0&& pg_cnt <= 3840);
+     ASSERT(pg_cnt > 0 && pg_cnt <= 3840);
      void *vaddr_start = vaddr_get(pf, pg_cnt);
      if (vaddr_start == NULL)
      {
@@ -199,17 +211,19 @@ void *malloc_page(enum pool_flags pf, uint32_t pg_cnt)
      return vaddr_start;
 }
 
-void *get_kernel_pages(uint32_t pg_cnt){
-     void* vaddr=malloc_page(PF_KERNEL,pg_cnt);
-     if(vaddr!=NULL){
-          memset(vaddr,0,pg_cnt*PG_SIZE);
+void *get_kernel_pages(uint32_t pg_cnt)
+{
+     void *vaddr = malloc_page(PF_KERNEL, pg_cnt);
+     if (vaddr != NULL)
+     {
+          memset(vaddr, 0, pg_cnt * PG_SIZE);
      }
      return vaddr;
 }
 
-//TODO
-uint32_t get_total_memory(){
-
+// TODO
+uint32_t get_total_memory()
+{
 }
 
 void mem_init()

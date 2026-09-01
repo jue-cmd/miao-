@@ -37,4 +37,6 @@
     ((IDT_DESC_P << 7) + (IDT_DESC_DPL3 << 5) + IDT_DESC_32_TYPE)
 
 #define NULL 0x00
+#define TRUE 1
+#define FALSE 0
 #endif

@@ -3,3 +3,10 @@
 .temp/
 .test/
 bochs.out/
+build/
+temp/
+*.o
+*.bin
+compile_commands.json
+qemu.log
+bochs.out

@@ -92,6 +92,8 @@ p_mode_start:
     jmp enter_kernel
 enter_kernel:
     call kernel_init
+    ; 主线程 PCB 在 0xc009e000，栈顶 0xc009f000（与 memory.c 布局一致）
+    mov esp, 0xc009f000
     jmp KERNEL_ENTRY_POINT
 
 kernel_init:
@@ -100,29 +102,56 @@ kernel_init:
     xor ecx,ecx
     xor edx,edx
 
-    mov dx,[KERNEL_BIN_BASE_ADDR+42]
-    mov ebx,[KERNEL_BIN_BASE_ADDR+28]
+    mov dx,[KERNEL_BIN_BASE_ADDR+42] ; e_phentsize
+    mov ebx,[KERNEL_BIN_BASE_ADDR+28] ; e_phoff
 
     add ebx,KERNEL_BIN_BASE_ADDR
-    mov cx, [KERNEL_BIN_BASE_ADDR+44]
+    mov cx, [KERNEL_BIN_BASE_ADDR+44] ; e_phnum
 
     .search_segment:
         cmp byte[ebx+0],PT_NULL
         je .PTNULL
-        push dword[ebx+0x10]
-        mov eax,[ebx+0x4]
+        ; memcpy(dst=p_vaddr, src=file+p_offset, size=p_filesz)
+        push dword[ebx+0x10]          ; p_filesz
+        mov eax,[ebx+0x4]             ; p_offset
         add eax,KERNEL_BIN_BASE_ADDR
         push eax
-        push dword[ebx+0x8]
+        push dword[ebx+0x8]           ; p_vaddr
         call mem_cpy
         add esp,12
+
+        ; BSS: zero [p_vaddr + p_filesz, p_memsz - p_filesz)
+        ; ecx 是 e_phnum 循环计数，必须先保存
+        push ecx
+        mov eax,[ebx+0x8]             ; p_vaddr
+        mov esi,[ebx+0x10]            ; p_filesz
+        add eax,esi                   ; bss start
+        mov ecx,[ebx+0x14]            ; p_memsz
+        sub ecx,esi                   ; bss size
+        jz .bss_done
+        call mem_set
+        .bss_done:
+        pop ecx
         .PTNULL:
             add ebx,edx
-        loop .search_segment    
+        loop .search_segment
+    ret
+
+; void mem_set(dst=eax, size=ecx) — 将 [eax, eax+ecx) 置 0
+mem_set:
+    push eax
+    push edi
+    mov edi,eax
+    xor al,al
+    cld
+    rep stosb
+    pop edi
+    pop eax
     ret
 setup_page:
-    mov ecx,4096
-    mov esi,0
+    ; 清空页目录 + 第一张页表（各 4KB），避免 PTE[256..] 残留脏位导致误判 Present
+    mov ecx, 4096 * 2
+    mov esi, 0
     .clear_page_dir:
         mov byte[PAGE_DIR_TABLE_POS+esi],0
         inc esi
@@ -150,13 +179,17 @@ setup_page:
         add edx,4096
         inc esi
     loop .create_pte
+    ; 页目录项 769~1022：为内核预建其余页表（写回页目录，不是第一张页表）
     mov eax, PAGE_DIR_TABLE_POS
-    mov ecx,254
-    mov esi,769
+    add eax, 0x2000                   ; 第二张页表物理地址
+    or eax, PG_US_U|PG_RW_W|PG_P
+    mov ebx, PAGE_DIR_TABLE_POS
+    mov ecx, 254
+    mov esi, 769
     .create_kernel_pde:
-        mov [ebx+esi*4],eax
+        mov [ebx+esi*4], eax
         inc esi
-        add eax,0x1000
+        add eax, 0x1000
     loop .create_kernel_pde
     ret
 
