@@ -133,7 +133,6 @@ void thread_init(void)
     list_init(&thread_ready_list);
     list_init(&thread_all_list);
     make_main_thread();
-    /* 调度逻辑动态插入时钟；timer_init 稍后注册 IRQ0 即可生效 */
     ASSERT(timer_register_hook(thread_timer_tick) == 0);
     puts("thread_init done\n");
 }
